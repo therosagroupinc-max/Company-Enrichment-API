@@ -1,27 +1,25 @@
-name	"company-enrichment-api"
-version	"1.0.0"
-description	"Company enrichment API powered by x402 micropayments. Pass a domain, get structured company data."
-type	"module"
-main	"bootstrap.js"
-scripts	
-start	"node bootstrap.js"
-dev	"node --watch bootstrap.js"
-dependencies	
-@coinbase/x402	"^2.1.0"
-@x402/core	"^2.1.0"
-@x402/express	"^2.1.0"
-@x402/evm	"^2.1.0"
-@x402/paywall	"^2.1.0"
-cors	"^2.8.5"
-dotenv	"^16.4.7"
-express	"^4.18.2"
-better-sqlite3	"^11.7.0"
-cheerio	"^1.0.0"
-engines	
-node	">=18"
-keywords	
-0	"x402"
-1	"company-enrichment"
-2	"api"
-3	"micropayments"
-license	"MIT"
+{
+  "name": "company-enrichment-api",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "bootstrap.js",
+  "scripts": {
+    "start": "node bootstrap.js",
+    "dev": "node --watch bootstrap.js"
+  },
+  "dependencies": {
+    "@coinbase/x402": "^2.1.0",
+    "@x402/core": "^2.1.0",
+    "@x402/express": "^2.1.0",
+    "@x402/evm": "^2.1.0",
+    "@x402/paywall": "^2.1.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.18.2",
+    "better-sqlite3": "^11.7.0",
+    "cheerio": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
