@@ -11,6 +11,7 @@ import { paymentMiddleware, x402ResourceServer } from '@x402/express';
 import { ExactEvmScheme } from '@x402/evm/exact/server';
 import { HTTPFacilitatorClient } from '@x402/core/server'; // ⚠️ MUST be /server (NOT /http)
 import { facilitator } from '@coinbase/x402';              // ⚠️ Use directly (NOT createFacilitatorConfig)
+import { bazaarResourceServerExtension, declareDiscoveryExtension } from '@x402/extensions/bazaar';
 import { createPaywall } from '@x402/paywall';
 import { evmPaywall } from '@x402/paywall/evm';
 
@@ -50,6 +51,7 @@ const facilitatorClient = new HTTPFacilitatorClient(facilitator);
 // Create resource server and register EVM scheme
 const resourceServer = new x402ResourceServer(facilitatorClient)
   .register(NETWORK, new ExactEvmScheme());
+resourceServer.registerExtension(bazaarResourceServerExtension);
 
 // Build paywall UI for wallet connection
 const paywall = createPaywall()
@@ -73,17 +75,61 @@ app.use(
   paymentMiddleware(
     {
       'GET /v1/enrich/*': {
-        accepts: [
-          {
-            scheme: 'exact',
-            price: PRICE,
-            network: NETWORK,
-            payTo,
-          },
-        ],
-        description: 'Company enrichment — pass a domain, get structured company data including name, description, industry, location, social links, tech stack, and DNS info.',
-        mimeType: 'application/json',
+    accepts: [
+      {
+        scheme: 'exact',
+        price: PRICE,
+        network: NETWORK,
+        payTo,
       },
+    ],
+    description: 'Company enrichment — pass a domain, get structured company data including name, description, industry, location, social links, tech stack, and DNS info.',
+    mimeType: 'application/json',
+    extensions: {
+      ...declareDiscoveryExtension({
+        input: { domain: 'stripe.com' },
+        inputSchema: {
+          properties: {
+            domain: { type: 'string', description: 'Company domain to enrich (e.g., stripe.com, shopify.com)' },
+          },
+          required: ['domain'],
+        },
+        output: {
+          example: {
+            domain: 'stripe.com',
+            status: 'success',
+            company: {
+              name: 'Stripe',
+              description: 'Financial infrastructure for the internet',
+              industry: 'Financial Technology',
+            },
+            location: { city: 'San Francisco', state: 'CA', country: 'US' },
+            social: { twitter: 'https://twitter.com/stripe', linkedin: 'https://linkedin.com/company/stripe' },
+            tech_stack: ['React', 'Next.js', 'Cloudflare'],
+            dns: { mail_provider: 'Google Workspace', has_spf: true, has_dmarc: true },
+          },
+          schema: {
+            properties: {
+              domain: { type: 'string' },
+              status: { type: 'string' },
+              company: {
+                type: 'object',
+                properties: {
+                  name: { type: 'string' },
+                  description: { type: 'string' },
+                  industry: { type: 'string' },
+                },
+              },
+              location: { type: 'object' },
+              social: { type: 'object' },
+              tech_stack: { type: 'array', items: { type: 'string' } },
+              dns: { type: 'object' },
+            },
+          },
+        },
+      }),
+    },
+  },
     },
     resourceServer,
     undefined,       // paywallConfig (using custom paywall below)
